@@ -1,34 +1,53 @@
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
+import androidx.compose.ui.unit.dp
+import data.local.DataStoreRepository
+import data.local.createDataStore
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import kmpdatastore.composeapp.generated.resources.Res
-import kmpdatastore.composeapp.generated.resources.compose_multiplatform
+import kotlin.random.Random
 
 @Composable
 @Preview
-fun App() {
+fun App(context: Any? = null) {
+
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+        val corotuineScope = rememberCoroutineScope()
+        val dataStoreRepo = remember { DataStoreRepository(dataStore = createDataStore(context)) }
+        var timeStamp: Long? by remember { mutableStateOf(null) }
+
+
+        LaunchedEffect(Unit) {
+            dataStoreRepo.readTimeStamp().collectLatest { savedTimeStamp ->
+                timeStamp = savedTimeStamp
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+        }
+
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+
+        ) {
+            Text(text = "Saved value: ${if (timeStamp == null) "Empty" else "$timeStamp"}")
+            Spacer(modifier = Modifier.padding(12.dp))
+            Button(onClick = {
+                corotuineScope.launch {
+                    dataStoreRepo.saveTimeStamp(Random.nextLong(100, 1000))
                 }
+            }) {
+                Text(text = "Save Random Number")
             }
         }
     }

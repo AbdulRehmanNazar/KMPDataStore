@@ -41,8 +41,12 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+            implementation(libs.datastore.preferences)
+            implementation(libs.atomicfu)
         }
     }
+    task("testClasses")
 }
 
 android {
